@@ -1,0 +1,65 @@
+name: Build and Deploy (staging)
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'eu-central-1' }}
+  PROJECT: sparkrock
+  ENVIRONMENT: staging
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Extract AWS account ID and set ECR repo URLs
+        id: ids
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
+          echo "API_REPO=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT}-api" >> $GITHUB_ENV
+          echo "WEB_REPO=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT}-web" >> $GITHUB_ENV
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push API image
+        run: |
+          docker build -t "$API_REPO:latest" app/backend
+          docker push "$API_REPO:latest"
+
+      - name: Build & Push Web image
+        run: |
+          docker build -t "$WEB_REPO:latest" app/frontend
+          docker push "$WEB_REPO:latest"
+
+      - name: Find EC2 instance ID by Name tag
+        id: find_instance
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances             --filters "Name=tag:Name,Values=${PROJECT}-${ENVIRONMENT}-ec2" "Name=instance-state-name,Values=running"             --query 'Reservations[].Instances[].InstanceId' --output text)
+          if [ -z "$INSTANCE_ID" ]; then
+            echo "No running instance found!" && exit 1
+          fi
+          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+
+      - name: Compute htpasswd line
+        id: ht
+        run: |
+          sudo apt-get update && sudo apt-get install -y apache2-utils
+          HTPASS=$(htpasswd -nbBC 10 "${{ secrets.BASIC_AUTH_USER }}" "${{ secrets.BASIC_AUTH_PASSWORD }}" | sed -e 's/\$/\$\$/g')
+          echo "HTPASS=$HTPASS" >> $GITHUB_ENV
+
+      - name: Deploy via SSM (pull images, update htpasswd, restart)
+        run: |
+          aws ssm send-command             --instance-ids "$INSTANCE_ID"             --document-name "AWS-RunShellScript"             --comment "Deploy ${PROJECT} ${ENVIRONMENT}"             --parameters 'commands=["sudo bash -lc ''mkdir -p /opt/sparkrock/nginx && echo $HTPASS > /opt/sparkrock/nginx/.htpasswd''","sudo bash -lc ''aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com''","sudo bash -lc ''cd /opt/sparkrock && docker compose pull && docker compose up -d''"]'             --output text
