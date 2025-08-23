@@ -3,6 +3,15 @@ resource "aws_security_group" "ec2_sg" {
   description = "Security group for EC2 instance"
   vpc_id      = aws_vpc.main.id
 
+  # Allow SSH access
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # Allow HTTPS traffic
   ingress {
     description = "HTTPS from anywhere"
