@@ -22,24 +22,20 @@ version: '3.8'
 
 services:
   api:
-    image: ${ECR_API_IMAGE:-nginx:alpine}
+    image: ${api_repo}
     container_name: sparkrock-api
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=staging
     restart: unless-stopped
-    # Temporary nginx image until ECR is ready
-    command: sh -c "echo 'API service starting...' && sleep 3600"
 
   web:
-    image: ${ECR_WEB_IMAGE:-nginx:alpine}
+    image: ${web_repo}
     container_name: sparkrock-web
     ports:
       - "80:80"
     restart: unless-stopped
-    # Temporary nginx image until ECR is ready
-    command: sh -c "echo 'Web service starting...' && sleep 3600"
 
   nginx:
     image: nginx:alpine
@@ -52,6 +48,7 @@ services:
       - api
       - web
     restart: unless-stopped
+EOF
 
 # Create nginx configuration
 cat > nginx.conf << 'EOF'
