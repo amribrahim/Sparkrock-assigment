@@ -19,7 +19,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   threshold           = 70
   alarm_description   = "Alarm when CPU exceeds 70%"
   dimensions = {
-    InstanceId = aws_instance.app.id
+    InstanceId = aws_instance.app_instance.id
   }
   alarm_actions = [aws_sns_topic.alerts.arn]
   ok_actions    = [aws_sns_topic.alerts.arn]
