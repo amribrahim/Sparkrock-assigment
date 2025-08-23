@@ -28,7 +28,7 @@ resource "aws_instance" "app_instance" {
   user_data_replace_on_change = true
 
   tags = {
-    Name        = "${var.project}-${var.environment}-instance"
+    Name        = "${var.project}-${var.environment}-ec2"
     Project     = var.project
     Environment = var.environment
   }
