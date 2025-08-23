@@ -47,7 +47,7 @@ jobs:
       - name: Find EC2 instance ID by Name tag
         id: find_instance
         run: |
-          INSTANCE_ID=$(aws ec2 describe-instances             --filters "Name=tag:Name,Values=${PROJECT}-${ENVIRONMENT}-ec2" "Name=instance-state-name,Values=running"             --query 'Reservations[].Instances[].InstanceId' --output text)
+          INSTANCE_ID=$(aws ec2 describe-instances             --filters "Name=tag:Name,Values=${PROJECT}-${ENVIRONMENT}-instance" "Name=instance-state-name,Values=running"             --query 'Reservations[].Instances[].InstanceId' --output text)
           if [ -z "$INSTANCE_ID" ]; then
             echo "No running instance found!" && exit 1
           fi
