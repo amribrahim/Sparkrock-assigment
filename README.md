@@ -55,13 +55,12 @@ This is a **complete DevOps solution** that demonstrates how to:
 ### Step 2: GitHub Repository Setup
 1. **Push this code** to a GitHub repository
 2. **Set default branch** to `main`
-3. **Enable GitHub Actions**
-4. **Configure Repository Secrets**:
+3. **Configure Repository Secrets**:
    - `AWS_ACCESS_KEY_ID` - Your AWS access key
    - `AWS_SECRET_ACCESS_KEY` - Your AWS secret key
    - `BASIC_AUTH_USER` - Username for app access
    - `BASIC_AUTH_PASSWORD` - Password for app access
-5. **Optional**: Set repository variable `AWS_REGION` (default: eu-central-1)
+4. **Optional**: Set repository variable `AWS_REGION` (default: eu-central-1)
 
 ### Step 3: Deploy and Run
 ```bash
