@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Update system and install prerequisites
+sudo su 
 yum update -y
-yum install -y docker git
+yum install -y docker git aws-cli
 
 # Start and enable Docker service
 systemctl start docker
@@ -12,9 +13,15 @@ systemctl enable docker
 curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
+# Ensure PATH includes /usr/local/bin
+export PATH="/usr/local/bin:$PATH"
+
 # Create application directory
 mkdir -p /opt/sparkrock-app
 cd /opt/sparkrock-app
+
+# Authenticate with ECR
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${region}.amazonaws.com
 
 # Create docker-compose.yml file
 cat > docker-compose.yml << 'EOF'
@@ -91,6 +98,7 @@ http {
 EOF
 
 # Start the services
+echo "=== Starting Docker services ==="
 docker-compose up -d
 
 # Wait a moment for services to start
@@ -101,6 +109,53 @@ echo "=== Checking Docker services ==="
 docker ps
 echo "=== Docker compose logs ==="
 docker-compose logs
+
+# Check if ECR images were pulled successfully
+if ! docker images | grep -q "sparkrock-api\|sparkrock-web"; then
+    echo "=== ECR images not available yet, using fallback images ==="
+    
+    # Stop current services
+    docker-compose down
+    
+    # Create fallback docker-compose with public images
+    cat > docker-compose-fallback.yml << 'EOF'
+version: '3.8'
+
+services:
+  api:
+    image: nginx:alpine
+    container_name: sparkrock-api
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    command: sh -c "echo 'API service placeholder' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"
+
+  web:
+    image: nginx:alpine
+    container_name: sparkrock-web
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    command: sh -c "echo 'Web service placeholder' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"
+
+  nginx:
+    image: nginx:alpine
+    container_name: sparkrock-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped
+EOF
+
+    # Start fallback services
+    docker-compose -f docker-compose-fallback.yml up -d
+    sleep 10
+    docker ps
+fi
 
 # Create a simple test page
 echo "=== Creating test page ==="
