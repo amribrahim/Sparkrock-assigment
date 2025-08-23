@@ -71,20 +71,36 @@ terraform apply -auto-approve -var="alert_email=your@email.com"
 
 # 2. Note the outputs:
 # - instance_public_ip
-# - application_https_url
+# - application_http_url (port 8080 - main app)
+# - application_direct_url (port 80)
 # - ecr_api_repo_url
 # - ecr_web_repo_url
 
-# 3. Confirm SNS email subscription (check your email)
+# 3. Test the infrastructure (NO SSL needed!)
+# Open: http://<instance-ip>:8080 (should show nginx working)
+# Open: http://<instance-ip>:80 (direct access)
+# Open: http://<instance-ip>:3000 (API health check)
 
-# 4. Push to GitHub main branch (triggers CI/CD)
+# 4. Confirm SNS email subscription (check your email)
+
+# 5. Push to GitHub main branch (triggers CI/CD)
 git add .
 git commit -m "Initial deployment"
 git push origin main
 
-# 5. Access your application
-# Open: https://<instance-ip> (use your Basic Auth credentials)
+# 6. Access your application
+# Main app: http://<instance-ip>:8080
+# API health: http://<instance-ip>:3000/api/health
 ```
+
+### 🧪 **Testing Your Deployment**
+After `terraform apply` completes, test these URLs in your browser:
+
+1. **`http://<instance-ip>:8080`** - Main application (nginx reverse proxy)
+2. **`http://<instance-ip>:80`** - Direct web service  
+3. **`http://<instance-ip>:3000/api/health`** - API health check
+
+**If these work, your infrastructure is running correctly!** 🎉
 
 ---
 
