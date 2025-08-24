@@ -158,9 +158,3 @@ docker compose restart
 cd infrastructure
 terraform destroy
 ```
-- 📊 **Real-time monitoring** and alerting
-- 🔄 **Automated rollbacks** and version management
-- 🌐 **Multi-AZ architecture** for high availability
-- 💰 **Cost-optimized** resource usage
-
-This solution demonstrates **enterprise-level DevOps skills** and shows you understand not just how to deploy an application, but how to build a **scalable, secure, and maintainable infrastructure** that follows industry best practices.
