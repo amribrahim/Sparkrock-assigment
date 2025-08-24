@@ -98,7 +98,6 @@ After `terraform apply` completes, test these URLs in your browser:
 
 1. **`http://<instance-ip>:8080`** - Main application (nginx reverse proxy)
 2. **`http://<instance-ip>:80`** - Direct web service  
-3. **`http://<instance-ip>:3000/api/health`** - API health check
 
 **If these work, your infrastructure is running correctly!** 🎉
 
@@ -159,44 +158,6 @@ docker compose restart
 cd infrastructure
 terraform destroy
 ```
-
----
-
-## 📁 Project Structure
-```
-/infrastructure     # Terraform: VPC, EC2, IAM, ECR, CloudWatch
-/cicd/github-actions/deploy.yml  # Build & deploy on push to main
-/app/backend        # Node.js API (Dockerized)
-/app/frontend       # Static front-end (Dockerized via nginx)
-```
-
----
-
-## ✅ Success Criteria
-- [ ] Infrastructure deployed via Terraform
-- [ ] Application accessible via HTTPS
-- [ ] Basic authentication working
-- [ ] CI/CD pipeline functional
-- [ ] CloudWatch monitoring active
-- [ ] SNS email alerts configured
-
-**That's it! Your application will be running and automatically deploy on every push to main.**
-
----
-
-## 🏆 **Why This Solution Exceeds Requirements**
-
-### **Assignment Requirements Met:**
-- ✅ **Infrastructure as Code**: Complete Terraform implementation
-- ✅ **CI/CD Pipeline**: Automated GitHub Actions workflow
-- ✅ **Container Deployment**: Docker containers with ECR
-- ✅ **Security**: HTTPS + Basic Auth + Security Groups
-- ✅ **Monitoring**: CloudWatch alarms with SNS notifications
-- ✅ **Documentation**: Clear setup and operation guides
-
-### **Bonus Features:**
-- 🚀 **Zero-downtime deployments** via SSM
-- 🔒 **Production-ready security** with IAM roles
 - 📊 **Real-time monitoring** and alerting
 - 🔄 **Automated rollbacks** and version management
 - 🌐 **Multi-AZ architecture** for high availability
